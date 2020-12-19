@@ -1,0 +1,127 @@
+1/ Q: I understand that the code for creating a group of aliens is placed in AlienInvasion's __init__() but why is _create_fleet() placed there as well? 
+Initially i thought _create_fleet() was supposed to be in run_game() like other helper methods, 
+so i called it from within run_game() but it turns out that made the game run very slowly. Why does this happen?
+
+A: 
+- To start the game, we only want to create 1 fleet. 
+
+- You can place it in run_game() but it would need to go before the while loop. 
+
+- If you put it in the while loop, you're creating an entire fleet every cycle of the main game loop. 
+
+- You will also see multiple rows of aliens on top of each other.
+
+- You can place helper methods anywhere you want. 
+
+- So most of __init__() is creating attributes needed for the overall game but we can also call methods there that help us set up the overall game. 
+
+- In Chapter 14 you'll create a play button and run_game() won't be called until the player clicks the play button. 
+
+- Placing _create_fleet() in __init__() means the aliens will be visible when the game opens but they won't start moving until the player clicks Play
+
+2/ Q: For game elements such as the ships, bullets & aliens, what are the differences between self.x, self.y and self.rect.x, self.rect.y? 
+What roles do these attributes take and how do they actually function in the game?
+
+A: 
+- The attributes self.x and self.y are just numbers that the Ship (or Bullet or Alien) class keeps track of. 
+
+- They have nothing to do with images or rects or anything. 
+
+- They're just numbers we can use any way we see fit. 
+
+- We end up storing floats in these, which allows us to keep precise track of where an element should be. 
+
+- This allows for decimal-precision adjustments in speed as the game progresses, which is also useful in tuning the initial state of the game. 
+
+- The attributes self.rect.x and self.rect.y are used to place the actual game element on the screen. 
+
+- These only hold integers because you can't place an element at half a pixel precision on the screen. 
+
+- They are not precise enough to track the actual positions in the game.
+
+- If you're curious to see this, you can throw a couple print calls in anywhere you want. 
+
+- So find a place, like maybe the start of update_screen(), which is part of the main game loop. 
+
+- Add a print(ship.x, ship.rect.x) and you should see what's happening
+
+3/ Q: In the Ship class's update(), to prevent the ship from disappearing when it reaches the screen's left edge, 
+the if condition "if self.moving_left and self.rect.left > 0" is used. But why the value 0?
+
+A: 
+- The left edge of the screen corresponds to the value x = 0. 
+
+- So these are equivalent:
+
+    if self.rect.left > 0
+    if self.rect.left > self.screen_rect.left
+
+- It's easier to just compare to 0, rather than having to go through the screen rect. The value of screen_rect.left will always be 0
+
+4/ Q: In the Bullet class's update(), why does the bullet's upward movement towards the top of the screen correspond to a decrease in its y-coordinate values?
+
+A: 
+- I think you are used to the origin (0, 0) in a coordinate system always being in the lower left corner of a grid. 
+
+- That's what we all learn in math classes. 
+
+- But in almost any computer window, we place the origin at the upper left. 
+
+- The upper left corner of a window is almost always stable. 
+
+- When people resize windows or scroll, they resize to make it larger on the right or larger on the bottom. 
+
+- So the top is always y=0, the left is always x=0, and we can't always count on what the right and bottom will be.
+
+- To make something move up, you decrease the y value. 
+
+- To make something move left, you decrease the x value
+
+5/ Q: In Chapter 13's "Adding Rows", we set out to find the available vertical spaces for the rows of the aliens by 
+subtracting the heights of the alien at the top of the screen, the ship and 2 more aliens at the bottom.  
+So how can we determine that those 2 removed aliens' heights are actually located at the bottom of the screen & right above the ship? 
+I reckon they could be anywhere on the screen (for example, right below the alien at the top)
+
+A: 
+- That's just figuring out a reasonable amount of vertical space to leave on the screen. 
+
+- We want some space at the top, let's call that 1 alien height. 
+
+- We could just say 50 px or 75 px but since we've got aliens, it's convenient to use their height as a unit of measure. 
+
+- We want more space below the fleet, call it 2 alien heights. 
+
+- You could just as easily say 100 px or 150px. 
+
+- Whatever you choose, subtract that from the height of the screen and divide the rest up among the rows of aliens
+
+6/ Q: In chapter 13's "Making the fleet move", So the check_edges() method in alien.py returns true if an alien reaches either edge of the screen but 
+none of the aliens is at any edge as the left aliens on the rows are placed 1 alien width from the screen's left edge and the right ones are 2 alien widths from the right edge. 
+And so that renders both check_edges() and the if statement's condition in _check_fleet_edges() in alien_invasion.py false. 
+That leads to _change_fleet_direction() not being called within _check_fleet_edges(). 
+As a result, the fleet  wouldn't be able to drop down when an alien reaches an edge and then change its direction. 
+But then i realized that the update() method in alien.py is what moves each alien to the right in the 1st place because the fleet_direction attribute is set to 1 in settings.py. 
+So then i looked into _update_aliens() in alien_invasion.py and saw that the update() method called on the aliens group is invoked after _check_fleet_edges(). 
+So that means in order to call update() on each alien, the if statement in _check_fleet_edges() should return true and 
+therefore, _change_fleet_direction() can be invoked within there, doesn't it?
+
+I myself theorized that at 1st, _check_fleet_edges() in _update_aliens() is supposed to keep evaluating to false for every alien in the fleet, 
+resulting in _change_fleet_direction() not being called. 
+Then the program flow would move on to processing the update() method and based on the call to _update_aliens() in the run_game() method's while loop, 
+the fleet would keep moving towards the screen's right edge until 1 alien is at the edge. 
+Only then _check_fleet_edges() will return true and kick-start the whole fleet-dropping-down and fleet-changing-direction process.
+
+I'm not sure if my theory is correct as when i run alien_invasion.py, the game functions normally, there's nothing wrong with it. 
+So i tried printing out the value of self.settings.fleet_direction in _change_fleet_direction() to see how it went. The 1st result i got was -1. 
+So does that mean at 1st the fleet moves to the left, instead of right? Is my theory accurate after all or is there more to it?
+
+A:
+- Your understanding sounds correct.
+
+        "So i tried printing out the value of self.settings.fleet_direction in _change_fleet_direction() to see how it went. The 1st result i got was -1." 
+
+- That depends where you put your print() call. 
+
+- If your print() call was at the end of the method, then by the print() call is run the direction has already been multiplied by -1. 
+
+- If you put it at the beginning of _change_fleet_direction(), you should see 1 the first time the method runs.

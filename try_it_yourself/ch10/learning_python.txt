@@ -1,0 +1,7 @@
+In Python you can work with lists.
+In Python you can work with dictionaries.
+In Python you can iterate thru loops.
+In Python you can get user input & use it in some way.
+In Python you can create functions to tackle some task.
+In Python you can create classes & methods.
+In Python you can read from, write to files & prevent programs from crashing by using exceptions.
